@@ -1,90 +1,91 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lexicon Login</title>
+    <title>Login - Lexicon</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f8fafc; font-family: sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; border: 1px solid #e2e8f0; }
-        .btn-primary { background: #4f46e5; border: none; padding: 12px; font-weight: bold; width: 100%; border-radius: 12px; }
+        body { background: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        .auth-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
         .hidden { display: none; }
-        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .spinner-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loader-overlay hidden"><div class="spinner-border text-primary"></div></div>
+<div id="loader" class="spinner-container hidden"><div class="spinner-border text-primary"></div></div>
 
-<div class="auth-card">
+<div class="auth-card" id="card">
     <div class="text-center mb-4">
-        <h3 id="title" class="fw-bold">Login</h3>
-        <p id="sub" class="text-muted small">Lexicon Cloud System</p>
+        <h3 id="t" class="fw-bold">Login</h3>
+        <p class="text-muted small">Lexicon Cloud System</p>
     </div>
 
-    <div id="regOnly" class="hidden">
+    <div id="regDiv" class="hidden">
         <label class="small fw-bold">Full Name</label>
-        <input type="text" id="regName" class="form-control mb-3" placeholder="Sankalpa">
+        <input type="text" id="name" class="form-control mb-3">
     </div>
 
     <label class="small fw-bold">Username</label>
-    <input type="text" id="username" class="form-control mb-3" placeholder="username">
+    <input type="text" id="user" class="form-control mb-3">
 
     <label class="small fw-bold">Password</label>
-    <input type="password" id="password" class="form-control mb-4" placeholder="••••••••">
+    <input type="password" id="pass" class="form-control mb-4">
 
-    <button class="btn btn-primary mb-3" id="mainBtn" onclick="handleAuth()">Login Now</button>
-    <button class="btn btn-link w-100 text-decoration-none small text-secondary" onclick="toggleMode()" id="toggleBtn">New user? Register</button>
+    <button class="btn btn-primary w-100 mb-3 fw-bold" id="btn" onclick="auth()">Login Now</button>
+    <button class="btn btn-link w-100 text-decoration-none small text-muted" onclick="toggle()" id="sw">New? Register</button>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwO0vlZUlyZqVS3H5fYR9sEOoRW0CX_t3vb_LRwo6eqjlPg0YaxSB9fJGSGLLtzCW3rzw/exec';
+    const URL = 'https://script.google.com/macros/s/AKfycbwACkzBASSiRm6cWAytncGQD5d9aYKJQPd8oLr2jxEjkqMLI9fiblFXzsJlyCebD-4TuA/exec';
     let isLogin = true;
 
-    if(localStorage.getItem('isLoggedIn') === 'true') window.location.href = 'index.html';
-
-    function toggleMode() {
+    function toggle() {
         isLogin = !isLogin;
-        document.getElementById('title').innerText = isLogin ? "Login" : "Register";
-        document.getElementById('regOnly').classList.toggle('hidden', isLogin);
-        document.getElementById('mainBtn').innerText = isLogin ? "Login Now" : "Register Now";
-        document.getElementById('toggleBtn').innerText = isLogin ? "New user? Register" : "Already have an account? Login";
+        document.getElementById('t').innerText = isLogin ? "Login" : "Register";
+        document.getElementById('regDiv').classList.toggle('hidden', isLogin);
+        document.getElementById('btn').innerText = isLogin ? "Login Now" : "Register Now";
+        document.getElementById('sw').innerText = isLogin ? "New? Register" : "Have an account? Login";
     }
 
-    async function handleAuth() {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        const n = document.getElementById('regName').value;
-        if(!u || !p) return alert("Fill all fields");
+    async function auth() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const n = document.getElementById('name').value;
+        
+        if(!u || !p) return alert("Please fill all");
 
         document.getElementById('loader').classList.remove('hidden');
+        document.getElementById('card').style.opacity = '0.5';
 
         const action = isLogin ? 'login' : 'register';
-        const url = `${SCRIPT_URL}?action=${action}&username=${u}&password=${p}&name=${n}`;
+        // සම්පූර්ණ URL එක හදාගන්නවා
+        const finalUrl = `${URL}?action=${action}&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&name=${encodeURIComponent(n)}`;
 
         try {
-            const response = await fetch(url);
-            const res = await response.json();
+            const res = await fetch(finalUrl);
+            const data = await res.json();
 
-            if(res.status === 'success') {
+            if(data.status === 'success') {
                 if(isLogin) {
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('username', u);
-                    localStorage.setItem('fullName', res.name);
-                    localStorage.setItem('cloudData', JSON.stringify(res.data || []));
+                    localStorage.setItem('fullName', data.name);
+                    localStorage.setItem('cloudHistory', JSON.stringify(data.data));
                     window.location.href = 'index.html';
                 } else {
-                    alert("Success! Now Login.");
-                    toggleMode();
+                    alert("Success! Please Login.");
+                    toggle();
                 }
             } else {
-                alert(res.message);
+                alert(data.message || "Failed");
             }
         } catch (e) {
-            alert("Error: Check Apps Script permissions.");
+            alert("Error: Script permissions check කරන්න.");
         } finally {
             document.getElementById('loader').classList.add('hidden');
+            document.getElementById('card').style.opacity = '1';
         }
     }
 </script>
