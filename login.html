@@ -3,77 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lexicon - Secure Login</title>
+    <title>Lexicon Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #4f46e5; --bg: #f8fafc; }
-        body { background: var(--bg); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        body { background: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
         .auth-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; border: 1px solid #e2e8f0; }
-        .form-control { border-radius: 12px; padding: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 15px; }
-        .btn-primary-custom { background: var(--primary); border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; color: white; transition: 0.3s; }
+        .btn-primary { background: #4f46e5; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; }
         .hidden { display: none; }
-        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loader-overlay hidden"><div class="spinner-border text-primary"></div></div>
+<div id="loader" class="loader hidden"><div class="spinner-border text-primary"></div></div>
 
-<div class="auth-card" id="card">
+<div class="auth-card">
     <div class="text-center mb-4">
-        <h3 id="title" class="fw-bold">Login</h3>
-        <p id="sub" class="text-secondary small">Lexicon Cloud System</p>
+        <h3 id="t" class="fw-bold">Login</h3>
+        <p class="text-muted small">Lexicon Cloud System</p>
     </div>
 
-    <div id="regFields" class="hidden">
-        <label class="small fw-bold mb-1">සම්පූර්ණ නම</label>
-        <input type="text" id="regName" class="form-control" placeholder="Full Name">
+    <div id="regOnly" class="hidden">
+        <label class="small fw-bold">Full Name</label>
+        <input type="text" id="regName" class="form-control mb-3" placeholder="Sankalpa">
     </div>
 
-    <label class="small fw-bold mb-1">පරිශීලක නාමය</label>
-    <input type="text" id="username" class="form-control" placeholder="Username">
+    <label class="small fw-bold">Username</label>
+    <input type="text" id="username" class="form-control mb-3" placeholder="username">
 
-    <label class="small fw-bold mb-1">මුරපදය</label>
-    <input type="password" id="password" class="form-control" placeholder="••••••••">
+    <label class="small fw-bold">Password</label>
+    <input type="password" id="password" class="form-control mb-4" placeholder="••••••••">
 
-    <button class="btn btn-primary-custom mb-3" id="mainBtn" onclick="handleAuth()">Login Now</button>
-    <button class="btn btn-link w-100 text-decoration-none small text-secondary" onclick="toggleMode()" id="toggleBtn">New user? Register</button>
+    <button class="btn btn-primary mb-3" id="mainBtn" onclick="auth()">Login Now</button>
+    <button class="btn btn-link w-100 text-decoration-none small text-secondary" onclick="toggle()">New user? Register</button>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwoRpXRn0ATMkMwoZKHJyi5HGNgMhw519MwY6ZEomG6IHkvq8xCSNhsqOHdIg27Ku32w/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyC3tDhLBudRMzblPznq-ASkrxLBgnK5cQKkHS2j6nwBxCk5FaAxoAsrgi1sgedArKXTQ/exec';
     let isLogin = true;
 
     if(localStorage.getItem('isLoggedIn') === 'true') window.location.href = 'index.html';
 
-    function toggleMode() {
+    function toggle() {
         isLogin = !isLogin;
-        document.getElementById('title').innerText = isLogin ? "Login" : "Register";
-        document.getElementById('regFields').classList.toggle('hidden', isLogin);
+        document.getElementById('t').innerText = isLogin ? "Login" : "Register";
+        document.getElementById('regOnly').classList.toggle('hidden', isLogin);
         document.getElementById('mainBtn').innerText = isLogin ? "Login Now" : "Register Now";
-        document.getElementById('toggleBtn').innerText = isLogin ? "New user? Register" : "Already have an account? Login";
     }
 
-    function handleAuth() {
-        const u = document.getElementById('username').value.trim();
-        const p = document.getElementById('password').value.trim();
-        const n = document.getElementById('regName').value.trim();
-
-        if(!u || !p) return alert("Fill all fields!");
+    function auth() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const n = document.getElementById('regName').value;
+        if(!u || !p) return alert("කරුණාකර සියල්ල පුරවන්න");
 
         document.getElementById('loader').classList.remove('hidden');
 
         const action = isLogin ? 'login' : 'register';
-        const finalUrl = `${SCRIPT_URL}?action=${action}&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&name=${encodeURIComponent(n)}&callback=authCallback`;
+        const finalUrl = `${SCRIPT_URL}?action=${action}&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&name=${encodeURIComponent(n)}&callback=handleRes`;
 
-        // JSONP ක්‍රමය: Fetch වෙනුවට Script Tag එකක් හරහා දත්ත ලබාගැනීම
         const script = document.createElement('script');
         script.src = finalUrl;
         document.body.appendChild(script);
     }
 
-    // Apps Script එකෙන් දත්ත ආවම මේක දුවනවා
-    function authCallback(res) {
+    function handleRes(res) {
         document.getElementById('loader').classList.add('hidden');
         if(res.status === 'success') {
             if(isLogin) {
@@ -82,11 +76,11 @@
                 localStorage.setItem('fullName', res.name);
                 window.location.href = 'index.html';
             } else {
-                alert("Registration Successful! Please login.");
-                toggleMode();
+                alert("ලියාපදිංචිය සාර්ථකයි! දැන් Login වන්න.");
+                toggle();
             }
         } else {
-            alert(res.message || "Authentication Failed!");
+            alert(res.message);
         }
     }
 </script>
