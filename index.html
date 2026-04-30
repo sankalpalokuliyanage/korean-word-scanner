@@ -41,7 +41,7 @@
     </div>
 
     <div class="word-list-container">
-        <h6 class="text-secondary mb-3">ඔබ ඇතුළත් කළ වචන (Your Entries)</h6>
+        <h6 class="text-secondary mb-3">Your Words</h6>
         <div id="myWords"></div>
     </div>
 </div>
@@ -53,7 +53,7 @@
     function start() {
         user = document.getElementById('userName').value;
         level = document.getElementById('userLevel').value;
-        if(!user || !level) return alert("නම සහ මට්ටම තෝරන්න!");
+        if(!user || !level) return alert("Enter your Name and Level");
         document.getElementById('uName').innerText = user;
         document.getElementById('uLevel').innerText = level;
         document.getElementById('loginSection').classList.add('hidden');
