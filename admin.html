@@ -3,121 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Korean Lab</title>
+    <title>Admin Dashboard - Korean Lab</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-dark: #0f172a;
-            --card-dark: #1e293b;
-            --accent: #4f46e5;
-        }
-        body { 
-            background: var(--bg-dark); 
-            color: #f8fafc; 
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        .sidebar {
-            background: var(--card-dark);
-            height: 100vh;
-            padding: 20px;
-            border-right: 1px solid #334155;
-        }
-        .main-content { padding: 30px; }
+        :root { --bg-dark: #0f172a; --card-dark: #1e293b; --accent: #4f46e5; --border: #334155; }
+        body { background: var(--bg-dark); color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        
+        .sidebar { background: var(--card-dark); height: 100vh; border-right: 1px solid var(--border); position: fixed; width: 250px; padding: 25px; }
+        .main-content { margin-left: 250px; padding: 40px; }
+        
         .stats-card {
-            background: var(--card-dark);
-            border: 1px solid #334155;
-            border-radius: 16px;
-            padding: 20px;
-            transition: 0.3s;
+            background: var(--card-dark); border: 1px solid var(--border);
+            border-radius: 20px; padding: 25px; height: 100%; transition: 0.3s;
         }
-        .stats-card:hover { border-color: var(--accent); }
-        .sheet-container {
-            background: #fff;
-            border-radius: 20px;
-            overflow: hidden;
-            height: 70vh;
-            margin-top: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+
+        .data-table-container {
+            background: var(--card-dark); border-radius: 20px; border: 1px solid var(--border);
+            padding: 25px; margin-top: 30px;
         }
-        iframe { width: 100%; height: 100%; border: none; }
-        .nav-link { color: #94a3b8; margin-bottom: 10px; border-radius: 8px; }
-        .nav-link.active { background: var(--accent); color: white; }
-        .nav-link:hover:not(.active) { background: #334155; color: white; }
+
+        table { color: #cbd5e1 !important; }
+        .table thead { background: rgba(79, 70, 229, 0.1); }
+        .form-select, .form-control { 
+            background: #0f172a !important; border: 1px solid var(--border) !important; color: white !important;
+            border-radius: 10px;
+        }
+
+        .chart-container { height: 250px; position: relative; }
+        .user-list-item { 
+            display: flex; justify-content: space-between; padding: 10px 0;
+            border-bottom: 1px solid var(--border); 
+        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="row">
-        <nav class="col-md-2 d-none d-md-block sidebar">
-            <h4 class="fw-bold mb-5 text-white"><i class="bi bi-incognito me-2"></i>Admin CP</h4>
-            <div class="nav flex-column">
-                <a href="#" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Overview</a>
-                <a href="https://docs.google.com/spreadsheets/d/1oHIydJv_oLGkMRXnmiyC_Y4oqRKLuB4jRO4-eTXr-Jk/edit?usp=sharing" target="_blank" class="nav-link"><i class="bi bi-table me-2"></i> Open Sheet</a>
-                <a href="index.html" class="nav-link"><i class="bi bi-plus-circle me-2"></i> Add Words</a>
-            </div>
-        </nav>
-
-        <main class="col-md-10 main-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold mb-1">Database Overview</h2>
-                    <p class="text-secondary small">Real-time Korean-English Vocabulary Dataset</p>
-                </div>
-                <button class="btn btn-primary rounded-pill px-4" onclick="location.reload()">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
-                </button>
-            </div>
-
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-3 bg-primary bg-opacity-10 p-3 me-3">
-                                <i class="bi bi-database-fill text-primary fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-secondary">API Status</small>
-                                <h5 class="m-0">Connected</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-3 bg-success bg-opacity-10 p-3 me-3">
-                                <i class="bi bi-people-fill text-success fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-secondary">Project Mode</small>
-                                <h5 class="m-0">Multi-User Live</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-3 bg-warning bg-opacity-10 p-3 me-3">
-                                <i class="bi bi-cloud-check-fill text-warning fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-secondary">Sync Target</small>
-                                <h5 class="m-0">Google Sheets</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sheet-container">
-                <iframe src="https://docs.google.com/spreadsheets/d/1oHIydJv_oLGkMRXnmiyC_Y4oqRKLuB4jRO4-eTXr-Jk/edit?usp=sharing"></iframe>
-            </div>
-        </main>
-    </div>
+<div class="sidebar">
+    <h4 class="fw-bold mb-5 text-white"><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Admin Panel</h4>
+    <nav class="nav flex-column">
+        <a href="#" class="nav-link text-white bg-primary rounded-3 mb-2 p-3"><i class="bi bi-grid-1x2-fill me-2"></i> Dashboard</a>
+        <a href="index.html" class="nav-link text-secondary mb-2 p-3"><i class="bi bi-plus-circle me-2"></i> Add Words</a>
+        <hr class="text-secondary">
+        <a href="https://docs.google.com/spreadsheets/d/1oHIydJv_oLGkMRXnmiyC_Y4oqRKLuB4jRO4-eTXr-Jk/edit" target="_blank" class="nav-link text-secondary p-3"><i class="bi bi-file-earmark-spreadsheet me-2"></i> View Sheet</a>
+    </nav>
 </div>
+
+<main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold">Database Intelligence</h2>
+            <p class="text-secondary">පරිශීලක ක්‍රියාකාරකම් සහ දත්ත විශ්ලේෂණය</p>
+        </div>
+        <button class="btn btn-primary px-4 py-2 rounded-pill" onclick="fetchAllData()">
+            <i class="bi bi-arrow-sync me-2"></i> Refresh Database
+        </button>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stats-card">
+                <h6 class="text-secondary fw-bold mb-4">USER WORD CONTRIBUTION</h6>
+                <div class="chart-container">
+                    <canvas id="userChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <h6 class="text-secondary fw-bold mb-4">WORDS PER USER</h6>
+                <div id="userWordList" class="overflow-auto" style="max-height: 200px;">
+                    <p class="text-muted small">Loading statistics...</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <h6 class="text-secondary fw-bold mb-3 text-primary">QUICK ADD (ADMIN)</h6>
+                <input type="text" id="adminKor" class="form-control mb-2" placeholder="Korean Word">
+                <input type="text" id="adminEng" class="form-control mb-2" placeholder="English Meaning">
+                <select id="adminLevel" class="form-select mb-3">
+                    <option>Level 1</option><option>Level 2</option><option>Level 3</option>
+                    <option>Level 4</option><option>Level 5</option><option>Level 6</option>
+                </select>
+                <button class="btn btn-primary w-100" onclick="adminAddWord()">Add to Database</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-table-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0">Words Explorer</h5>
+            <div class="d-flex gap-3">
+                <select id="levelFilter" class="form-select" onchange="filterData()" style="width: 200px;">
+                    <option value="All">All Levels</option>
+                    <option>Level 1</option><option>Level 2</option><option>Level 3</option>
+                    <option>Level 4</option><option>Level 5</option><option>Level 6</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Level</th>
+                        <th>Korean</th>
+                        <th>English</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    <tr><td colspan="5" class="text-center py-5 text-muted">පද්ධතියට සම්බන්ධ වෙමින්...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWpTnUzxJpupFW7Tb4P3xl4tFeHoJQh1iEDiXTQEHstD9PTeQZWKL5d_hyK6Q8XgBwJw/exec';
+    let fullDataset = [];
+    let userChart = null;
+
+    async function fetchAllData() {
+        try {
+            // මෙහිදී action=getHistory හරහා සම්පූර්ණ දත්ත ගෙන්වා ගන්නා බව උපකල්පනය කෙරේ
+            // නැතහොත් සියලු දත්ත දෙන action එකක් Apps Script එකට එක් කරන්න
+            const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=All`); 
+            fullDataset = await res.json();
+            
+            updateStats();
+            filterData();
+        } catch (e) {
+            console.error("Fetch failed", e);
+        }
+    }
+
+    function updateStats() {
+        // 1. User wise word counts
+        const userCounts = {};
+        fullDataset.forEach(item => {
+            const u = item.user || 'Unknown';
+            userCounts[u] = (userCounts[u] || 0) + 1;
+        });
+
+        // 2. Render List
+        const listContainer = document.getElementById('userWordList');
+        listContainer.innerHTML = '';
+        Object.entries(userCounts).forEach(([name, count]) => {
+            listContainer.innerHTML += `
+                <div class="user-list-item">
+                    <span class="text-light fw-bold"><i class="bi bi-person me-2 text-primary"></i>${name}</span>
+                    <span class="badge bg-primary bg-opacity-20 text-primary">${count} Words</span>
+                </div>
+            `;
+        });
+
+        // 3. Update Pie Chart
+        const ctx = document.getElementById('userChart').getContext('2d');
+        if (userChart) userChart.destroy();
+        
+        userChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(userCounts),
+                datasets: [{
+                    data: Object.values(userCounts),
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+            }
+        });
+    }
+
+    function filterData() {
+        const level = document.getElementById('levelFilter').value;
+        const tbody = document.getElementById('dataTableBody');
+        tbody.innerHTML = '';
+
+        const filtered = level === "All" ? fullDataset : fullDataset.filter(d => d.level === level);
+
+        filtered.forEach(item => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><small class="text-secondary">${item.date || 'Today'}</small></td>
+                    <td><span class="text-info">${item.user}</span></td>
+                    <td><span class="badge bg-light text-dark">${item.level}</span></td>
+                    <td class="fw-bold text-white fs-5">${item.korean}</td>
+                    <td>${item.english}</td>
+                </tr>
+            `;
+        });
+    }
+
+    async function adminAddWord() {
+        const kor = document.getElementById('adminKor').value;
+        const eng = document.getElementById('adminEng').value;
+        const level = document.getElementById('adminLevel').value;
+
+        if(!kor || !eng) return alert("Fill all fields");
+
+        try {
+            const params = new URLSearchParams({ user: 'Admin', level: level, korean: kor, english: eng });
+            await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
+            alert("Success!");
+            location.reload();
+        } catch (e) { alert("Error saving"); }
+    }
+
+    window.onload = fetchAllData;
+</script>
 
 </body>
 </html>
