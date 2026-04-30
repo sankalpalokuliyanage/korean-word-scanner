@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Korean Lab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --accent: #4f46e5;
+        }
+        body { 
+            background: var(--bg-dark); 
+            color: #f8fafc; 
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .sidebar {
+            background: var(--card-dark);
+            height: 100vh;
+            padding: 20px;
+            border-right: 1px solid #334155;
+        }
+        .main-content { padding: 30px; }
+        .stats-card {
+            background: var(--card-dark);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            transition: 0.3s;
+        }
+        .stats-card:hover { border-color: var(--accent); }
+        .sheet-container {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            height: 70vh;
+            margin-top: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+        .nav-link { color: #94a3b8; margin-bottom: 10px; border-radius: 8px; }
+        .nav-link.active { background: var(--accent); color: white; }
+        .nav-link:hover:not(.active) { background: #334155; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <h4 class="fw-bold mb-5 text-white"><i class="bi bi-incognito me-2"></i>Admin CP</h4>
+            <div class="nav flex-column">
+                <a href="#" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Overview</a>
+                <a href="https://docs.google.com/spreadsheets/d/1X-P9aE9Yf-7Y7H7Y7H7Y7H7Y7H7Y7H7Y7/edit" target="_blank" class="nav-link"><i class="bi bi-table me-2"></i> Open Sheet</a>
+                <a href="index.html" class="nav-link"><i class="bi bi-plus-circle me-2"></i> Add Words</a>
+            </div>
+        </nav>
+
+        <main class="col-md-10 main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Database Overview</h2>
+                    <p class="text-secondary small">Real-time Korean-English Vocabulary Dataset</p>
+                </div>
+                <button class="btn btn-primary rounded-pill px-4" onclick="location.reload()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+                </button>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 bg-primary bg-opacity-10 p-3 me-3">
+                                <i class="bi bi-database-fill text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-secondary">API Status</small>
+                                <h5 class="m-0">Connected</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 bg-success bg-opacity-10 p-3 me-3">
+                                <i class="bi bi-people-fill text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-secondary">Project Mode</small>
+                                <h5 class="m-0">Multi-User Live</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 bg-warning bg-opacity-10 p-3 me-3">
+                                <i class="bi bi-cloud-check-fill text-warning fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-secondary">Sync Target</small>
+                                <h5 class="m-0">Google Sheets</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet-container">
+                <iframe src="https://docs.google.com/spreadsheets/d/1X-P9aE9Yf-7Y7H7Y7H7Y7H7Y7H7Y7H7Y7/edit?rm=minimal"></iframe>
+            </div>
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

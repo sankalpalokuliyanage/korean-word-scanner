@@ -3,157 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Korean Vocabulary Lab</title>
+    <title>Korean Word Collector</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #4f46e5; --secondary: #6366f1; }
-        body { background: #f8fafc; font-family: 'Segoe UI', sans-serif; }
-        .full-height { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .glass-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; width: 100%; transition: 0.3s; }
-        .btn-main:hover { background: var(--secondary); transform: translateY(-2px); }
+        :root { --primary: #4f46e5; --bg: #f8fafc; }
+        body { background: var(--bg); font-family: 'Segoe UI', sans-serif; padding: 15px; }
+        .glass-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin: auto; max-width: 500px; }
         .hidden { display: none; }
-        .status-dot { height: 10px; width: 10px; background-color: #10b981; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; width: 100%; transition: 0.3s; }
+        .word-list-container { margin-top: 30px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .word-item { background: white; padding: 12px 18px; border-radius: 12px; margin-bottom: 8px; border-left: 5px solid var(--primary); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
     </style>
 </head>
 <body>
 
-<div id="loginScreen" class="container full-height">
-    <div class="glass-card text-center">
-        <h2 class="fw-bold mb-4">🇰🇷 SNU Collector</h2>
-        <p class="text-muted mb-4">ඇතුළත් වීමට ඔබේ නම සහ මට්ටම තෝරන්න</p>
-        <input type="text" id="userName" class="form-control mb-3 p-3 rounded-4" placeholder="ඔබේ නම (Your Name)">
-        <select id="userLevel" class="form-select mb-4 p-3 rounded-4">
-            <option value="" disabled selected>Select Level</option>
-            <option value="Level 1">Level 1</option>
-            <option value="Level 2">Level 2</option>
-            <option value="Level 3">Level 3</option>
-            <option value="Level 4">Level 4</option>
-            <option value="Level 5">Level 5</option>
-            <option value="Level 6">Level 6</option>
-        </select>
-        <button class="btn-main" onclick="startSession()">Continue</button>
-    </div>
+<div id="loginSection" class="glass-card mt-5">
+    <h3 class="fw-bold text-center mb-4">🇰🇷 Start Session</h3>
+    <input type="text" id="userName" class="form-control mb-3 p-3 rounded-4" placeholder="ඔබේ නම (Your Name)">
+    <select id="userLevel" class="form-select mb-4 p-3 rounded-4">
+        <option value="" disabled selected>Select Level</option>
+        <option value="Level 1">Level 1</option><option value="Level 2">Level 2</option>
+        <option value="Level 3">Level 3</option><option value="Level 4">Level 4</option>
+        <option value="Level 5">Level 5</option><option value="Level 6">Level 6</option>
+    </select>
+    <button class="btn-main" onclick="start()">Get Started</button>
 </div>
 
-<div id="entryScreen" class="container full-height hidden">
+<div id="entrySection" class="hidden">
     <div class="glass-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="small text-muted"><span class="status-dot"></span> <span id="displayUser"></span></span>
-            <span class="badge bg-primary rounded-pill" id="displayLevel"></span>
+        <div class="d-flex justify-content-between mb-3 small text-muted">
+            <span>User: <b id="uName"></b></span>
+            <span>Level: <b id="uLevel"></b></span>
         </div>
-        <h4 class="mb-4 fw-bold">Add New Word</h4>
-        
-        <label class="small fw-bold text-secondary">Korean Word</label>
-        <input type="text" id="korInput" class="form-control mb-3 p-3 rounded-3" placeholder="උදා: 학교" autofocus>
-        
-        <label class="small fw-bold text-secondary">English Meaning</label>
-        <input type="text" id="engInput" class="form-control mb-4 p-3 rounded-3" placeholder="උදා: School">
-        
-        <button id="saveBtn" class="btn-main mb-3" onclick="submitData()">Save Word</button>
-        <button class="btn btn-light w-100 rounded-3 text-muted" onclick="showDashboard()">View Admin Dashboard</button>
+        <input type="text" id="korInput" class="form-control mb-3 p-3 rounded-3" placeholder="Korean Word (හන්ගුල්)">
+        <input type="text" id="engInput" class="form-control mb-4 p-3 rounded-3" placeholder="English Meaning (තේරුම)">
+        <button id="addBtn" class="btn-main" onclick="save()">Save & Add</button>
     </div>
-</div>
 
-<div id="dashboardScreen" class="container py-5 hidden">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold m-0">Admin Dashboard</h2>
-        <button class="btn btn-outline-primary" onclick="backToEntry()">+ Add More</button>
-    </div>
-    
-    <div class="row g-4">
-        <div class="col-md-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-0">
-                    <iframe id="sheetFrame" src="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=sharing" style="width: 100%; height: 600px; border: none;"></iframe>
-                </div>
-            </div>
-        </div>
+    <div class="word-list-container">
+        <h6 class="text-secondary mb-3">ඔබ ඇතුළත් කළ වචන (Your Entries)</h6>
+        <div id="myWords"></div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
-    let currentUser = "";
-    let currentLevel = "";
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhy5h67ZSkM6eogU5myS7gro-KB89oN2hbP187twjqjs_isb-a1bapYyy5DyTkTNldFg/exec';
+    let user = "", level = "";
 
-    // Session ආරම්භ කිරීම
-    function startSession() {
-        const name = document.getElementById('userName').value;
-        const level = document.getElementById('userLevel').value;
-        
-        if(!name || !level) return alert("කරුණාකර නම සහ Level එක ඇතුළත් කරන්න.");
-        
-        currentUser = name;
-        currentLevel = level;
-        
-        document.getElementById('displayUser').innerText = currentUser;
-        document.getElementById('displayLevel').innerText = currentLevel;
-        
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('entryScreen').classList.remove('hidden');
+    function start() {
+        user = document.getElementById('userName').value;
+        level = document.getElementById('userLevel').value;
+        if(!user || !level) return alert("නම සහ මට්ටම තෝරන්න!");
+        document.getElementById('uName').innerText = user;
+        document.getElementById('uLevel').innerText = level;
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('entrySection').classList.remove('hidden');
     }
 
-    // දත්ත යැවීම
-    async function submitData() {
+    async function save() {
         const kor = document.getElementById('korInput').value;
         const eng = document.getElementById('engInput').value;
-        const btn = document.getElementById('saveBtn');
+        if(!kor || !eng) return;
 
-        if(!kor || !eng) return alert("Fields හිස්ව තැබිය නොහැක.");
-
+        const btn = document.getElementById('addBtn');
         btn.disabled = true;
-        btn.innerText = "Saving...";
 
-        const params = new URLSearchParams({
-            user: currentUser,
-            level: currentLevel,
-            korean: kor,
-            english: eng
-        });
+        // UI එකට වහාම එකතු කිරීම
+        addToList(kor, eng);
 
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
-            
-            // UI Reset
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                body: new URLSearchParams({user, level, korean: kor, english: eng}),
+                mode: 'no-cors' 
+            });
             document.getElementById('korInput').value = "";
             document.getElementById('engInput').value = "";
             document.getElementById('korInput').focus();
-            
-            // පොඩි success animation එකක්
-            btn.classList.replace('btn-main', 'btn-success');
-            btn.innerText = "Saved ✓";
-            setTimeout(() => {
-                btn.classList.replace('btn-success', 'btn-main');
-                btn.innerText = "Save Word";
-                btn.disabled = false;
-            }, 1000);
-            
-        } catch (e) {
-            alert("Error!");
-            btn.disabled = false;
-        }
+        } catch (e) { alert("Error saving!"); }
+        btn.disabled = false;
     }
 
-    // Navigation Logic
-    function showDashboard() {
-        document.getElementById('entryScreen').classList.add('hidden');
-        document.getElementById('dashboardScreen').classList.remove('hidden');
+    function addToList(k, e) {
+        const div = document.createElement('div');
+        div.className = 'word-item animate__animated animate__fadeIn';
+        div.innerHTML = `<div><b>${k}</b><br><small class="text-muted">${e}</small></div> <span class="badge bg-light text-dark">Added</span>`;
+        const list = document.getElementById('myWords');
+        list.insertBefore(div, list.firstChild);
     }
-
-    function backToEntry() {
-        document.getElementById('dashboardScreen').classList.add('hidden');
-        document.getElementById('entryScreen').classList.remove('hidden');
-    }
-
-    // Keyboard Shortcuts
-    document.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter' && !document.getElementById('entryScreen').classList.contains('hidden')) {
-            if(document.activeElement.id === 'korInput') document.getElementById('engInput').focus();
-            else if(document.activeElement.id === 'engInput') submitData();
-        }
-    });
 </script>
-
 </body>
 </html>
