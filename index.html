@@ -75,7 +75,7 @@
 
         // Fetch History from Cloud
         try {
-            const res = await fetch(`${SCRIPT_URL}?action=getHistory&user=${currentUser}&level=${currentLevel}`);
+            const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${currentLevel}`);
             localHistory = await res.json();
             renderHistory();
         } catch (e) {
