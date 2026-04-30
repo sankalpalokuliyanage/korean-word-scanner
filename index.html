@@ -9,72 +9,59 @@
     <style>
         :root { --primary: #4f46e5; --bg: #f1f5f9; }
         body { background: var(--bg); font-family: 'Inter', sans-serif; padding: 20px; }
-        .app-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 900px; margin: auto; }
+        .app-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 950px; margin: auto; }
         .hidden { display: none; }
         .form-control { border-radius: 12px; padding: 12px; border: 2px solid #e2e8f0; margin-bottom: 15px; }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
         .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; }
         .history-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .kor-txt { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
-        .scroll-area { max-height: 400px; overflow-y: auto; padding-right: 10px; }
-        .section-title { font-size: 0.9rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; display: flex; justify-content: space-between; }
-        .badge-count { background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; }
+        .scroll-area { max-height: 450px; overflow-y: auto; padding-right: 10px; }
+        .section-title { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .badge-count { background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="app-card">
-        <div id="setupSection" style="max-width: 500px; margin: auto;">
-            <h4 class="fw-bold mb-4 text-center">Start Session</h4>
-            <label class="small fw-bold text-secondary">SELECT LEVEL</label>
+        <div id="setupSection" style="max-width: 450px; margin: auto;">
+            <h4 class="fw-bold mb-4 text-center">Session Setup</h4>
+            <label class="small fw-bold text-secondary">CHOOSE LEVEL</label>
             <select id="levelSelect" class="form-select form-control">
                 <option>Level 1</option><option>Level 2</option><option>Level 3</option>
                 <option>Level 4</option><option>Level 5</option><option>Level 6</option>
             </select>
-            <label class="small fw-bold text-secondary">USER NAME</label>
-            <input type="text" id="userName" class="form-control" placeholder="Enter your name">
-            <button class="btn-main" onclick="initSession()">Continue & Sync</button>
+            <label class="small fw-bold text-secondary">YOUR NAME</label>
+            <input type="text" id="userName" class="form-control" placeholder="Enter name...">
+            <button class="btn-main" onclick="initSession()">Sync & Start</button>
         </div>
 
         <div id="workSection" class="hidden">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between mb-4">
                 <div>
                     <h5 class="fw-bold m-0" id="displayUser"></h5>
                     <span class="badge bg-primary rounded-pill" id="displayLevel"></span>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="location.reload()">Switch Session</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="location.reload()">Switch</button>
             </div>
 
-            <div class="row justify-content-center mb-5">
-                <div class="col-md-8">
-                    <div class="p-4 border rounded-4 bg-light bg-opacity-50">
-                        <input type="text" id="korInput" class="form-control text-center fs-4" placeholder="හන්ගුල් (Korean)..." autofocus>
-                        <input type="text" id="engInput" class="form-control text-center" placeholder="තේරුම (Meaning)...">
-                        <button id="saveBtn" class="btn-main" onclick="saveData()">
-                            <i class="bi bi-cloud-arrow-up-fill me-2"></i>SAVE WORD
-                        </button>
-                    </div>
+            <div class="row mb-5 justify-content-center text-center">
+                <div class="col-md-7">
+                    <input type="text" id="korInput" class="form-control text-center fs-4" placeholder="හන්ගුල්..." autofocus>
+                    <input type="text" id="engInput" class="form-control text-center" placeholder="තේරුම...">
+                    <button id="saveBtn" class="btn-main" onclick="saveData()">SAVE WORD</button>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 border-end">
-                    <div class="section-title">
-                        Your History <span class="badge-count" id="myCount">0</span>
-                    </div>
-                    <div id="myHistoryList" class="scroll-area">
-                        <p class="text-center text-muted small py-4">ඔබ ඇතුළත් කළ වචන මෙහි පෙන්වයි.</p>
-                    </div>
+                    <div class="section-title">Your History <span class="badge-count" id="myCount">0</span></div>
+                    <div id="myHistoryList" class="scroll-area"></div>
                 </div>
 
                 <div class="col-md-6">
-                    <div class="section-title">
-                        Level Global Bank <span class="badge-count" id="globalCount">0</span>
-                    </div>
-                    <div id="globalHistoryList" class="scroll-area">
-                        <p class="text-center text-muted small py-4">මෙම Level එකේ ඇති සියලුම වචන...</p>
-                    </div>
+                    <div class="section-title">Global Level Bank <span class="badge-count" id="globalCount">0</span></div>
+                    <div id="globalHistoryList" class="scroll-area"></div>
                 </div>
             </div>
         </div>
@@ -82,32 +69,29 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyIlCMqdBz-hEW362WAKTLw7IgO_oPkqITIUXyRgYBNJgfBy8VVxAHjledlLeLB7N7gQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWpTnUzxJpupFW7Tb4P3xl4tFeHoJQh1iEDiXTQEHstD9PTeQZWKL5d_hyK6Q8XgBwJw/exec';
     let currentUser = "", currentLevel = "", allWords = [];
 
-    // 1. Session ආරම්භය සහ සම්පූර්ණ දත්ත ලබාගැනීම
     async function initSession() {
         currentUser = document.getElementById('userName').value.trim();
         currentLevel = document.getElementById('levelSelect').value;
-
-        if(!currentUser) return alert("කරුණාකර නමක් ඇතුළත් කරන්න.");
+        if(!currentUser) return;
 
         document.getElementById('setupSection').classList.add('hidden');
         document.getElementById('workSection').classList.remove('hidden');
         document.getElementById('displayUser').innerText = currentUser;
         document.getElementById('displayLevel').innerText = currentLevel;
 
-        fetchAndRender();
+        fetchData();
     }
 
-    async function fetchAndRender() {
+    async function fetchData() {
         try {
-            // Level එකට අදාළ සියලුම වචන ලබාගැනීම
             const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${currentLevel}`);
             allWords = await res.json();
             renderLists();
         } catch (e) {
-            console.error("Error fetching history", e);
+            console.log("Fetch error");
         }
     }
 
@@ -115,63 +99,46 @@
         const myHistoryList = document.getElementById('myHistoryList');
         const globalList = document.getElementById('globalHistoryList');
 
-        // User ගේ වචන පමණක් පෙරීම (Apps Script එකෙන් user column එක එවන බව උපකල්පනය කෙරේ)
-        // සටහන: ඔබගේ Apps Script එකේ වචනය ඇතුළත් කළ user ගේ නමද return විය යුතුය. 
-        // එය "user" ලෙස තිබේ යයි මම සලකමි.
-        const myWords = allWords.filter(item => item.user === currentUser);
+        // ඔයාගේ වචන විතරක් වෙන් කරගන්නවා (Case-insensitive)
+        const myWords = allWords.filter(item => item.user.toLowerCase() === currentUser.toLowerCase());
 
-        // Counts Update
         document.getElementById('myCount').innerText = myWords.length;
         document.getElementById('globalCount').innerText = allWords.length;
 
-        // Render My History
-        myHistoryList.innerHTML = myWords.length ? myWords.map(item => createCard(item)).join('') : '<p class="text-center text-muted small py-4">No words added yet.</p>';
-
-        // Render Global Bank
-        globalList.innerHTML = allWords.length ? allWords.map(item => createCard(item, true)).join('') : '<p class="text-center text-muted small py-4">No data available.</p>';
+        myHistoryList.innerHTML = myWords.length ? myWords.map(i => card(i)).join('') : '<p class="text-center text-muted small py-4">තවම වචන නැත</p>';
+        globalList.innerHTML = allWords.length ? allWords.map(i => card(i, true)).join('') : '<p class="text-center text-muted small py-4">දත්ත නැත</p>';
     }
 
-    function createCard(item, showUser = false) {
+    function card(item, showUser = false) {
         return `
             <div class="history-card">
                 <div>
                     <div class="kor-txt">${item.korean}</div>
-                    <div class="small text-muted">${item.english} ${showUser ? `<span class="ms-2 opacity-50">| by ${item.user || 'Admin'}</span>` : ''}</div>
+                    <div class="small text-muted">${item.english} ${showUser ? `<span class="ms-1 opacity-50">| by ${item.user}</span>` : ''}</div>
                 </div>
-                <i class="bi bi-check2-all text-success"></i>
+                <i class="bi bi-check-circle-fill text-success"></i>
             </div>
         `;
     }
 
-    // 2. දත්ත Save කිරීම
     async function saveData() {
         const kor = document.getElementById('korInput').value.trim();
         const eng = document.getElementById('engInput').value.trim();
         if(!kor || !eng) return;
 
-        // Duplicate Check (Level එකේ සියලුම වචන අතර පරීක්ෂා කරයි)
-        const isDuplicate = allWords.some(item => item.korean === kor);
-        if(isDuplicate) {
-            const confirmAdd = confirm(`⚠️ "${kor}" දැනටමත් මේ Level එකේ තියෙනවා. ආයෙත් ඇතුළත් කරන්නද?`);
-            if(!confirmAdd) return;
+        // Global Check for Duplicates
+        if(allWords.some(i => i.korean === kor)) {
+            if(!confirm(`"${kor}" දැනටමත් තියෙනවා. ආයෙත් දාන්නද?`)) return;
         }
 
         const btn = document.getElementById('saveBtn');
         btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>SYNCING...`;
 
         try {
-            const params = new URLSearchParams({ 
-                user: currentUser, 
-                level: currentLevel, 
-                korean: kor, 
-                english: eng 
-            });
-            
+            const params = new URLSearchParams({ user: currentUser, level: currentLevel, korean: kor, english: eng });
             await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
 
-            // සාර්ථක වූ පසු ලිස්ට් එක refresh කිරීම
-            // UI එකේ පෙනුම සඳහා වහාම එකතු කිරීම
+            // Local Update
             allWords.unshift({ user: currentUser, korean: kor, english: eng });
             renderLists();
 
@@ -179,14 +146,12 @@
             document.getElementById('engInput').value = "";
             document.getElementById('korInput').focus();
         } catch (e) {
-            alert("Error saving!");
+            alert("Error!");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = `<i class="bi bi-cloud-arrow-up-fill me-2"></i>SAVE WORD`;
         }
     }
 
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if(e.key === 'Enter') {
             if(document.activeElement.id === 'korInput') document.getElementById('engInput').focus();
