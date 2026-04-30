@@ -3,150 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Korean Scanner</title>
+    <title>High-Precision Korean Scanner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-        .container { max-width: 650px; margin-top: 20px; }
-        .upload-card { border: 2px dashed #007bff; border-radius: 15px; background: white; transition: 0.3s; }
-        #imagePreview { width: 100%; border-radius: 10px; display: none; margin-bottom: 20px; border: 1px solid #ddd; }
-        .word-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #007bff; }
-        .loading-spinner { display: none; }
-        canvas { display: none; } /* Pre-processing සඳහා රහසිගතව භාවිතා වේ */
+        :root { --primary-color: #4a90e2; }
+        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+        .scanner-container { max-width: 600px; margin: auto; padding: 20px; }
+        .preview-wrapper { position: relative; display: none; margin-bottom: 20px; border: 2px solid var(--primary-color); border-radius: 10px; overflow: hidden; }
+        #imagePreview { width: 100%; display: block; }
+        .crop-guide { position: absolute; border: 2px dashed red; pointer-events: none; display: none; }
+        .word-row { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-add { background-color: var(--primary-color); border: none; color: white; }
     </style>
 </head>
 <body>
 
-<div class="container pb-5">
+<div class="scanner-container">
     <div class="text-center mb-4">
-        <h2 class="fw-bold text-primary">🇰🇷 SNU Smart Scanner v2</h2>
-        <p class="text-muted">High-Accuracy OCR Technology පාවිච්චි කර ඇත</p>
+        <h2 class="fw-bold">🇰🇷 Accuracy Booster Scan</h2>
+        <p class="text-secondary">මුළු පිටුවම එකපාර scan නොකර column එකක් බැගින් කරන්න</p>
     </div>
 
-    <div class="card upload-card p-4 mb-4 text-center">
-        <input type="file" id="fileInput" accept="image/*" capture="environment" class="form-control mb-2">
-        <small class="text-secondary font-monospace">Hint: Use good lighting and keep the camera steady.</small>
+    <div class="card p-4 border-0 shadow-sm mb-4">
+        <input type="file" id="fileInput" accept="image/*" capture="environment" class="form-control">
+        <p class="small text-center mt-2 text-danger">පොතේ එක තීරුවක් (Column) පේන ලෙස photo ගන්න.</p>
     </div>
 
-    <canvas id="preprocessCanvas"></canvas>
-    <img id="imagePreview" alt="Original Preview">
+    <div id="loading" class="text-center mb-3" style="display:none;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 fw-bold">Deep Scanning...</p>
+    </div>
 
-    <div id="loading" class="loading-spinner text-center">
-        <div class="spinner-grow text-primary" role="status"></div>
-        <p class="mt-2 fw-bold">Analyzing Layout & Extracting Text...</p>
+    <div class="preview-wrapper" id="previewWrapper">
+        <img id="imagePreview" src="">
     </div>
 
     <div id="editArea" style="display:none;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="m-0">වචන ලැයිස්තුව:</h5>
-            <span class="badge bg-primary" id="wordCount">0 words found</span>
-        </div>
         <div id="wordContainer"></div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1I8cBQcJwrLqVgbfLvTqbDGciOle98avxX-j2G_XUMFLr48afMjhz0PSF9N2obMAhdg/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1I8cBQcJwrLqVgbfLvTqbDGciOle98avxX-j2G_XUMFLr48afMjhz0PSF9N2obMAhdg/exec';
     const fileInput = document.getElementById('fileInput');
     const imagePreview = document.getElementById('imagePreview');
+    const previewWrapper = document.getElementById('previewWrapper');
     const loading = document.getElementById('loading');
-    const editArea = document.getElementById('editArea');
     const wordContainer = document.getElementById('wordContainer');
-    const canvas = document.getElementById('preprocessCanvas');
-    const ctx = canvas.getContext('2d');
 
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Show preview
         imagePreview.src = URL.createObjectURL(file);
-        imagePreview.style.display = 'block';
+        previewWrapper.style.display = 'block';
         loading.style.display = 'block';
-        editArea.style.display = 'none';
         wordContainer.innerHTML = '';
+        document.getElementById('editArea').style.display = 'none';
 
-        // Step 1: Pre-process Image for Better Accuracy
-        const processedImage = await preprocessImage(file);
+        // Initialize OCR Worker
+        const worker = await Tesseract.createWorker('kor+eng');
+        
+        // පේළි හඳුනා ගැනීම පහසු කිරීමට (Trained Data Optimization)
+        await worker.setParameters({
+            tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ가-힣?,. ',
+            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_COLUMN // මෙන්න මේක වැදගත්
+        });
 
-        // Step 2: Run OCR with Advanced Config
         try {
-            const worker = await Tesseract.createWorker('kor+eng');
-            
-            // Layout analysis mode එක වෙනස් කරමු (Single column logic)
-            await worker.setParameters({
-                tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT, 
-                tessjs_create_hocr: '0',
-                tessjs_create_tsv: '0'
-            });
-
-            const result = await worker.recognize(processedImage);
+            const result = await worker.recognize(file);
             const lines = result.data.lines;
 
-            let count = 0;
             lines.forEach(line => {
                 const text = line.text.trim();
-                // SNU පොතේ වචනයක් සාමාන්‍යයෙන් අකුරු 2කට වඩා වැඩියි
-                if (text.length < 2) return; 
+                if (text.length < 2) return;
 
-                // Regex - Korean / English / Page Number වෙන් කිරීම
-                const kor = text.match(/[가-힣]{1,}/g);
-                const eng = text.match(/[a-zA-Z]{2,}[\s[a-zA-Z]*/g);
-                const page = text.match(/\d{2,3}$/);
+                // වඩාත් දියුණු regex එකක්
+                // කොරියන් අකුරු, ඉන්පසු එන ඉංග්‍රීසි අකුරු සහ අවසානයේ ඇති ඉලක්කම් වෙන් කිරීම
+                const parts = text.match(/^([가-힣\s\?]+)\s+([a-zA-Z\s\/\-\?]+)\s+(\d+)?$/);
 
-                if (kor) {
-                    count++;
-                    createRow(
-                        kor.join(' '), 
-                        eng ? eng[0].trim() : '', 
-                        page ? page[0] : ''
-                    );
+                if (parts) {
+                    createRow(parts[1].trim(), parts[2].trim(), parts[3] || '');
+                } else {
+                    // Regex එකට අහු වුණේ නැත්නම් සාමාන්‍ය විදියට field එකට දාමු
+                    const kor = text.match(/[가-힣]+/g);
+                    const eng = text.match(/[a-zA-Z\s]+/g);
+                    if(kor) createRow(kor.join(' '), eng ? eng.join(' ').trim() : '', '');
                 }
             });
 
-            document.getElementById('wordCount').innerText = `${count} words found`;
             await worker.terminate();
             loading.style.display = 'none';
-            editArea.style.display = 'block';
+            document.getElementById('editArea').style.display = 'block';
         } catch (err) {
             console.error(err);
-            alert("OCR Error! Please try again.");
             loading.style.display = 'none';
         }
     });
-
-    // Image එකේ Contrast සහ Brightness හදන Logic එක
-    async function preprocessImage(file) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                
-                // Grayscale and Contrast filter
-                ctx.filter = 'grayscale(1) contrast(1.5) brightness(1.2)';
-                ctx.drawImage(img, 0, 0);
-                
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
-            };
-        });
-    }
 
     function createRow(kor, eng, page) {
         const div = document.createElement('div');
         div.className = 'word-row';
         div.innerHTML = `
-            <div class="row g-2 align-items-center">
-                <div class="col-5">
-                    <input type="text" class="form-control form-control-sm korean-val" value="${kor}">
+            <div class="row g-2">
+                <div class="col-6">
+                    <label class="small text-muted">Korean</label>
+                    <input type="text" class="form-control korean-val" value="${kor}">
                 </div>
-                <div class="col-5">
-                    <input type="text" class="form-control form-control-sm english-val" value="${eng}">
+                <div class="col-6">
+                    <label class="small text-muted">English</label>
+                    <input type="text" class="form-control english-val" value="${eng}">
                 </div>
-                <div class="col-2 p-0 text-center">
-                    <button class="btn btn-sm btn-primary w-75" onclick="sendRow(this, '${page}')">Add</button>
+                <div class="col-12 mt-2 d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary">Page: ${page}</span>
+                    <button class="btn btn-add btn-sm px-4" onclick="sendRow(this, '${page}')">Submit Word</button>
                 </div>
             </div>
         `;
@@ -158,10 +129,8 @@
         const korean = row.querySelector('.korean-val').value;
         const english = row.querySelector('.english-val').value;
 
-        if(!korean || !english) return alert("Fields cannot be empty!");
-
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btn.innerHTML = 'Sending...';
 
         const params = new URLSearchParams();
         params.append('korean', korean);
@@ -169,21 +138,13 @@
         params.append('page', pageNo);
 
         try {
-            // Google Script එකට data යවන විට CORS issues මඟ හැරීමට no-cors භාවිතා වේ
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: params,
-                mode: 'no-cors'
-            });
-            
-            row.style.background = "#d4edda";
-            row.style.borderLeft = "5px solid #28a745";
-            btn.innerHTML = "✓";
-            btn.className = "btn btn-sm btn-outline-secondary w-75";
+            await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors'});
+            row.style.background = '#e7f3ff';
+            btn.innerText = 'Added ✓';
+            btn.classList.replace('btn-add', 'btn-secondary');
         } catch (err) {
             btn.disabled = false;
-            btn.innerText = "Retry";
-            alert("Upload failed!");
+            btn.innerText = 'Retry';
         }
     }
 </script>
