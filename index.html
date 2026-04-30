@@ -3,94 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Korean Word Collector</title>
+    <title>Lexicon Pro - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        if(localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+    </script>
     <style>
-        :root { --primary: #4f46e5; --bg: #f8fafc; }
-        body { background: var(--bg); font-family: 'Segoe UI', sans-serif; padding: 15px; }
-        .glass-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin: auto; max-width: 500px; }
-        .hidden { display: none; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; width: 100%; transition: 0.3s; }
-        .word-list-container { margin-top: 30px; max-width: 500px; margin-left: auto; margin-right: auto; }
-        .word-item { background: white; padding: 12px 18px; border-radius: 12px; margin-bottom: 8px; border-left: 5px solid var(--primary); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        body { background: #f1f5f9; font-family: sans-serif; padding: 20px; }
+        .glass-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 500px; margin: auto; }
+        .history-card { background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 4px solid #4f46e5; }
     </style>
 </head>
 <body>
 
-<div id="loginSection" class="glass-card mt-5">
-    <h3 class="fw-bold text-center mb-4">🇰🇷 Start Session</h3>
-    <input type="text" id="userName" class="form-control mb-3 p-3 rounded-4" placeholder="Your Name">
-    <select id="userLevel" class="form-select mb-4 p-3 rounded-4">
-        <option value="" disabled selected>Select Level</option>
-        <option value="Level 1">Level 1</option><option value="Level 2">Level 2</option>
-        <option value="Level 3">Level 3</option><option value="Level 4">Level 4</option>
-        <option value="Level 5">Level 5</option><option value="Level 6">Level 6</option>
-    </select>
-    <button class="btn-main" onclick="start()">Get Started</button>
-</div>
-
-<div id="entrySection" class="hidden">
-    <div class="glass-card">
-        <div class="d-flex justify-content-between mb-3 small text-muted">
-            <span>User: <b id="uName"></b></span>
-            <span>Level: <b id="uLevel"></b></span>
-        </div>
-        <input type="text" id="korInput" class="form-control mb-3 p-3 rounded-3" placeholder="Korean Word (හන්ගුල්)">
-        <input type="text" id="engInput" class="form-control mb-4 p-3 rounded-3" placeholder="English Meaning (තේරුම)">
-        <button id="addBtn" class="btn-main" onclick="save()">Save & Add</button>
+<div class="glass-card">
+    <div class="d-flex justify-content-between mb-4">
+        <h5 class="fw-bold">Hi, <span id="uName"></span></h5>
+        <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
     </div>
 
-    <div class="word-list-container">
-        <h6 class="text-secondary mb-3">Your Words</h6>
-        <div id="myWords"></div>
+    <div class="mb-3">
+        <select id="level" class="form-select mb-2"><option>Level 1</option><option>Level 2</option><option>Level 3</option><option>Level 4</option><option>Level 5</option><option>Level 6</option></select>
+        <input type="text" id="kor" class="form-control mb-2" placeholder="Korean Word" autofocus>
+        <input type="text" id="eng" class="form-control mb-3" placeholder="English Meaning">
+        <button id="addBtn" class="btn btn-primary w-100 fw-bold" onclick="save()">SAVE WORD</button>
     </div>
+
+    <hr>
+    <h6 class="fw-bold mb-3">Your Cloud History</h6>
+    <div id="historyList"></div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhy5h67ZSkM6eogU5myS7gro-KB89oN2hbP187twjqjs_isb-a1bapYyy5DyTkTNldFg/exec';
-    let user = "", level = "";
-
-    function start() {
-        user = document.getElementById('userName').value;
-        level = document.getElementById('userLevel').value;
-        if(!user || !level) return alert("Enter your Name and Level");
-        document.getElementById('uName').innerText = user;
-        document.getElementById('uLevel').innerText = level;
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('entrySection').classList.remove('hidden');
-    }
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwO0vlZUlyZqVS3H5fYR9sEOoRW0CX_t3vb_LRwo6eqjlPg0YaxSB9fJGSGLLtzCW3rzw/exec';
+    document.getElementById('uName').innerText = localStorage.getItem('fullName');
+    
+    let myHistory = JSON.parse(localStorage.getItem('cloudData') || '[]');
+    renderHistory();
 
     async function save() {
-        const kor = document.getElementById('korInput').value;
-        const eng = document.getElementById('engInput').value;
+        const kor = document.getElementById('kor').value;
+        const eng = document.getElementById('eng').value;
+        const level = document.getElementById('level').value;
+        const user = localStorage.getItem('username');
+
         if(!kor || !eng) return;
 
         const btn = document.getElementById('addBtn');
         btn.disabled = true;
 
-        // UI එකට වහාම එකතු කිරීම
-        addToList(kor, eng);
-
         try {
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: new URLSearchParams({user, level, korean: kor, english: eng}),
-                mode: 'no-cors' 
-            });
-            document.getElementById('korInput').value = "";
-            document.getElementById('engInput').value = "";
-            document.getElementById('korInput').focus();
-        } catch (e) { alert("Error saving!"); }
+            const params = new URLSearchParams({ user, level, korean: kor, english: eng });
+            await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
+
+            myHistory.unshift({ korean: kor, english: eng, level: level });
+            renderHistory();
+            document.getElementById('kor').value = '';
+            document.getElementById('eng').value = '';
+            document.getElementById('kor').focus();
+        } catch (e) { alert("Error!"); }
         btn.disabled = false;
     }
 
-    function addToList(k, e) {
-        const div = document.createElement('div');
-        div.className = 'word-item animate__animated animate__fadeIn';
-        div.innerHTML = `<div><b>${k}</b><br><small class="text-muted">${e}</small></div> <span class="badge bg-light text-dark">Added</span>`;
-        const list = document.getElementById('myWords');
-        list.insertBefore(div, list.firstChild);
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = myHistory.map(item => `
+            <div class="history-card">
+                <div><small class="text-muted">${item.level}</small><br><b>${item.korean}</b> - ${item.english}</div>
+            </div>
+        `).join('');
     }
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 </script>
 </body>
 </html>
