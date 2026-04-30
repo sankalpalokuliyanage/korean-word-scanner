@@ -1,141 +1,219 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Korean Writing Lab - Offline OCR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Precision Korean Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
-        /* ඔයා දීපු CSS ටික මෙතනට එනවා (මම UI එක ලස්සනට තියාගත්තා) */
-        :root { --primary: #4f46e5; --success: #10b981; --bg: #f8fafc; --card: #ffffff; }
-        body { background: var(--bg); font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
-        .eval-card { background: var(--card); width: 100%; max-width: 700px; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
-        .upload-zone { border: 2px dashed #e2e8f0; border-radius: 16px; padding: 40px; cursor: pointer; }
-        #imgPreview { width: 100%; border-radius: 12px; margin-top: 20px; display: none; }
-        .hidden { display: none; }
-        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; text-align: left; }
-        .data-card { background: #f1f5f9; padding: 15px; border-radius: 12px; }
-        .hangul { font-size: 22px; font-weight: bold; color: var(--primary); }
-        .circular-chart { max-width: 100px; margin: auto; }
-        .circle { fill: none; stroke: var(--success); stroke-width: 2.8; stroke-linecap: round; transition: stroke-dasharray 0.5s; }
-        .circle-bg { fill: none; stroke: #eee; stroke-width: 3.8; }
-        #processBtn { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px;}
+        body { background: #0f0f0f; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; margin: 0; }
+        .scanner-header { padding: 12px; background: #1a1a1a; border-bottom: 1px solid #333; font-size: 14px; }
+        
+        /* Camera Viewport */
+        .viewport-container { position: relative; width: 100%; height: 40vh; background: #000; display: flex; align-items: center; justify-content: center; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Focus Box */
+        .focus-box {
+            position: absolute; width: 75%; height: 50px; border: 2px solid #00d2ff; border-radius: 10px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); /* Dim background outside box */
+            pointer-events: none; transition: 0.3s;
+        }
+        .focus-box::after {
+            content: 'SCAN AREA'; position: absolute; top: -22px; left: 5px;
+            font-size: 10px; color: #00d2ff; font-weight: bold; letter-spacing: 1px;
+        }
+
+        /* Controls */
+        .control-panel { padding: 20px; background: #1a1a1a; border-radius: 25px 25px 0 0; margin-top: -25px; position: relative; height: 60vh; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
+        .input-group-custom { background: #252525; padding: 12px 15px; border-radius: 15px; margin-bottom: 15px; border: 2px solid transparent; transition: 0.3s; cursor: pointer; }
+        .active-scan { border-color: #00d2ff !important; background: #1e2a3a !important; }
+        .active-scan.eng-mode { border-color: #ffc107 !important; background: #2a2518 !important; }
+        
+        .btn-submit { background: linear-gradient(45deg, #00d2ff, #3a7bd5); border: none; color: white; padding: 14px; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .btn-submit:disabled { background: #444; opacity: 0.7; }
+        
+        #status { font-size: 12px; color: #888; }
+        canvas { display: none; }
     </style>
 </head>
 <body>
 
-<div class="eval-card">
-    <div class="badge">FREE OCR POWERED</div>
-    <h1>Korean Writing Lab</h1>
-    <p>Analyze your handwriting using Tesseract Engine</p>
+<div class="scanner-header text-center fw-bold">
+    PRECISION VOCAB COLLECTOR
+</div>
 
-    <div class="upload-zone" id="dropZone" onclick="document.getElementById('imageInput').click()">
-        <input type="file" id="imageInput" accept="image/*" onchange="handleFile(this.files[0])" hidden />
-        <div class="icon">📸</div>
-        <p>Upload a clear photo of your Korean text</p>
+<div class="viewport-container">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="focus-box" id="focusBox"></div>
+    <canvas id="captureCanvas"></canvas>
+</div>
+
+<div class="control-panel">
+    <div class="text-center mb-3">
+        <span class="badge rounded-pill bg-dark border border-secondary px-3 py-2" id="modeBadge">MODE: KOREAN</span>
     </div>
 
-    <img id="imgPreview" src="" />
-    <button id="processBtn" class="hidden" onclick="processOCR()">Analyze Handwriting</button>
-
-    <div id="loader" class="hidden">
-        <p class="pulsate">AI is decoding your Hangul... Please wait.</p>
+    <div class="input-group-custom active-scan" id="korGroup" onclick="setMode('kor')">
+        <label class="small text-info fw-bold">Korean Word</label>
+        <input type="text" id="korInput" class="form-control bg-transparent border-0 text-white p-0 fw-bold fs-5" placeholder="Scanning..." readonly>
     </div>
 
-    <div id="dashboard" class="hidden">
-        <div class="score-section">
-            <svg viewBox="0 0 36 36" class="circular-chart">
-                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="scorePath" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <text x="18" y="20.35" class="percentage" id="scoreDisplay" style="font-size: 8px; text-anchor: middle;">0</text>
-            </svg>
-            <p>Accuracy Score</p>
-        </div>
-
-        <div class="analysis-grid">
-            <div class="data-card">
-                <label>Detected Text</label>
-                <div id="textOriginal" class="hangul"></div>
-            </div>
-            <div class="data-card">
-                <label>Target Text (Dataset)</label>
-                <div id="textTarget" class="hangul">--</div>
-            </div>
-        </div>
-
-        <div id="feedbackBox" style="margin-top:20px; padding:15px; border-radius:12px; background:#fffbeb; text-align:left;">
-            <strong>Feedback:</strong>
-            <p id="textFeedback"></p>
-        </div>
-        
-        <button class="reset-btn" onclick="location.reload()" style="margin-top:20px;">Try Again</button>
+    <div class="input-group-custom" id="engGroup" onclick="setMode('eng')">
+        <label class="small text-warning fw-bold">English Meaning</label>
+        <input type="text" id="engInput" class="form-control bg-transparent border-0 text-white p-0 fw-bold fs-5" placeholder="Tap to scan meaning" readonly>
     </div>
+
+    <div class="d-grid gap-2 mt-4">
+        <button id="addBtn" class="btn btn-submit rounded-pill shadow" onclick="uploadData()">ADD TO DATASET</button>
+        <button class="btn btn-link btn-sm text-secondary text-decoration-none" onclick="clearFields()">Clear & Reset</button>
+    </div>
+
+    <div id="status" class="text-center mt-3">Initializing AI & Camera...</div>
 </div>
 
 <script>
-// මෙතන ඔයාට පුළුවන් නිවැරදි වචන ලැයිස්තුවක් දාන්න (Comparison එකට)
-const TARGET_VOCAB = ["학교", "사과", "우유", "안녕하세요", "한국어"];
-
-function handleFile(file) {
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        document.getElementById('imgPreview').src = e.target.result;
-        document.getElementById('imgPreview').style.display = 'block';
-        document.getElementById('dropZone').style.display = 'none';
-        document.getElementById('processBtn').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-async function processOCR() {
-    const loader = document.getElementById('loader');
-    const dashboard = document.getElementById('dashboard');
-    const img = document.getElementById('imgPreview');
+    // 1. ඔයාගේ Apps Script URL එක මෙතනට දාන්න
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1I8cBQcJwrLqVgbfLvTqbDGciOle98avxX-j2G_XUMFLr48afMjhz0PSF9N2obMAhdg/exec';
     
-    loader.classList.remove('hidden');
-    document.getElementById('processBtn').classList.add('hidden');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('captureCanvas');
+    const korInput = document.getElementById('korInput');
+    const engInput = document.getElementById('engInput');
+    const status = document.getElementById('status');
+    const focusBox = document.getElementById('focusBox');
+    const modeBadge = document.getElementById('modeBadge');
 
-    try {
-        // Tesseract භාවිතා කර අකුරු කියවීම
-        const worker = await Tesseract.createWorker('kor');
-        const { data: { text } } = await worker.recognize(img.src);
-        const detected = text.trim();
-        await worker.terminate();
+    let currentMode = 'kor'; 
+    let worker = null;
+    let isProcessing = false;
 
-        // සරල Analysis එකක් කරමු
-        // මෙතනදී අපි බලනවා ඔයා scan කරපු වචනය අපේ Dataset එකේ තියෙනවද කියලා
-        let score = 0;
-        let feedback = "";
-        let target = "Unknown";
+    // 2. කැමරාව සහ Tesseract පණගැන්වීම
+    async function init() {
+        try {
+            status.innerText = "Accessing Camera...";
+            const constraints = {
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
 
-        // Dataset එකේ තියෙන වචනයක් එක්ක සැසඳීම (Similarity check)
-        const match = TARGET_VOCAB.find(v => detected.includes(v)) || "Unknown";
+            status.innerText = "Loading Korean AI Model...";
+            worker = await Tesseract.createWorker('kor+eng');
+            await worker.setParameters({
+                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE,
+            });
+            
+            status.innerText = "Scanner Ready";
+            scanLoop();
+        } catch (err) {
+            console.error(err);
+            status.innerText = "Error: " + err.message;
+            alert("කැමරාවට අවසර ලබා දිය යුතුය. කරුණාකර settings පරීක්ෂා කරන්න.");
+        }
+    }
+
+    // 3. Scan කරන Mode එක මාරු කිරීම
+    function setMode(mode) {
+        currentMode = mode;
+        const isKor = mode === 'kor';
         
-        if (match !== "Unknown") {
-            score = 100;
-            target = match;
-            feedback = "විශිෂ්ටයි! ඔබ නිවැරදිව ලියා ඇත.";
-        } else {
-            score = detected.length > 0 ? 40 : 0;
-            feedback = "අකුරු හඳුනාගැනීම අපහසුයි. නැවත පැහැදිලිව ලියන්න.";
+        document.getElementById('korGroup').classList.toggle('active-scan', isKor);
+        document.getElementById('engGroup').classList.toggle('active-scan', !isKor);
+        document.getElementById('engGroup').classList.toggle('eng-mode', !isKor);
+        
+        modeBadge.innerText = `MODE: ${mode.toUpperCase()}`;
+        modeBadge.className = isKor ? 'badge rounded-pill bg-info text-dark px-3 py-2' : 'badge rounded-pill bg-warning text-dark px-3 py-2';
+        focusBox.style.borderColor = isKor ? '#00d2ff' : '#ffc107';
+    }
+
+    // 4. Real-time Scan Loop
+    async function scanLoop() {
+        if (!isProcessing && worker) {
+            isProcessing = true;
+            
+            // Focus box එක ඇතුළේ තියෙන රූපය විතරක් Capture කිරීම
+            const ctx = canvas.getContext('2d');
+            const box = focusBox.getBoundingClientRect();
+            const videoBox = video.getBoundingClientRect();
+
+            // Video එකේ scale එකට අනුව කපා ගැනීම
+            const scaleX = video.videoWidth / videoBox.width;
+            const scaleY = video.videoHeight / videoBox.height;
+
+            const sx = (box.left - videoBox.left) * scaleX;
+            const sy = (box.top - videoBox.top) * scaleY;
+            const sw = box.width * scaleX;
+            const sh = box.height * scaleY;
+
+            canvas.width = sw;
+            canvas.height = sh;
+            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+
+            try {
+                const { data: { text } } = await worker.recognize(canvas);
+                const cleaned = text.trim().replace(/\n/g, "");
+
+                if (cleaned.length >= 1) {
+                    if (currentMode === 'kor') {
+                        // කොරියන් අකුරු තියෙනවා නම් විතරක් ගන්න
+                        if (/[가-힣]/.test(cleaned)) korInput.value = cleaned;
+                    } else {
+                        // ඉංග්‍රීසි අකුරු තියෙනවා නම් විතරක් ගන්න
+                        if (/[a-zA-Z]/.test(cleaned)) engInput.value = cleaned;
+                    }
+                }
+            } catch (e) {}
+            isProcessing = false;
+        }
+        setTimeout(scanLoop, 600); 
+    }
+
+    // 5. Google Sheet එකට Data යැවීම
+    async function uploadData() {
+        if (!korInput.value || !engInput.value) {
+            alert("වචනය සහ තේරුම දෙකම තිබිය යුතුය.");
+            return;
         }
 
-        // Dashboard එක update කිරීම
-        document.getElementById('scoreDisplay').textContent = score;
-        document.getElementById('scorePath').setAttribute('stroke-dasharray', `${score}, 100`);
-        document.getElementById('textOriginal').innerText = detected || "No text found";
-        document.getElementById('textTarget').innerText = match;
-        document.getElementById('textFeedback').innerText = feedback;
+        const btn = document.getElementById('addBtn');
+        btn.disabled = true;
+        btn.innerText = "UPLOADING...";
 
-        loader.classList.add('hidden');
-        dashboard.classList.remove('hidden');
+        const params = new URLSearchParams({
+            korean: korInput.value,
+            english: engInput.value,
+            page: 'Precision-Live'
+        });
 
-    } catch (err) {
-        alert("OCR Error!");
-        console.error(err);
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
+            status.innerText = "Saved Successfully! ✓";
+            
+            // සාර්ථක නම් Fields හිස් කර නැවත කොරියන් මෝඩ් එකට යන්න
+            setTimeout(() => {
+                clearFields();
+                setMode('kor');
+                status.innerText = "Scanner Ready";
+            }, 1000);
+
+        } catch (e) {
+            alert("Upload Failed!");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "ADD TO DATASET";
+        }
     }
-}
+
+    function clearFields() {
+        korInput.value = '';
+        engInput.value = '';
+    }
+
+    // Start Everything
+    init();
 </script>
 </body>
 </html>
