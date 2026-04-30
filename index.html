@@ -3,69 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Lexicon</title>
+    <title>Advanced Lexicon Collector</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script>
-        if(localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
-    </script>
     <style>
-        body { background: #f1f5f9; padding: 20px; font-family: sans-serif; }
-        .glass-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 500px; margin: auto; }
-        .history-item { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 4px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; }
+        :root { --primary: #4f46e5; --bg: #f1f5f9; }
+        body { background: var(--bg); font-family: 'Inter', sans-serif; padding: 20px; }
+        .app-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 550px; margin: auto; }
+        .hidden { display: none; }
+        .form-control { border-radius: 12px; padding: 12px; border: 2px solid #e2e8f0; margin-bottom: 15px; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; }
+        .history-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .kor-txt { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-<div class="glass-card">
-    <div class="d-flex justify-content-between mb-4 align-items-center">
-        <h5 class="fw-bold m-0">Hi, <span id="uName"></span></h5>
-        <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
-    </div>
+<div class="container">
+    <div class="app-card">
+        <div id="setupSection">
+            <h4 class="fw-bold mb-4">Start Session</h4>
+            <label class="small fw-bold text-secondary">SELECT LEVEL</label>
+            <select id="levelSelect" class="form-select form-control">
+                <option>Level 1</option><option>Level 2</option><option>Level 3</option>
+                <option>Level 4</option><option>Level 5</option><option>Level 6</option>
+            </select>
+            <label class="small fw-bold text-secondary">USER NAME</label>
+            <input type="text" id="userName" class="form-control" placeholder="Enter your name">
+            <button class="btn-main" onclick="initSession()">Continue & Sync</button>
+        </div>
 
-    <div class="mb-3">
-        <select id="level" class="form-select mb-2"><option>Level 1</option><option>Level 2</option><option>Level 3</option><option>Level 4</option><option>Level 5</option><option>Level 6</option></select>
-        <input type="text" id="kor" class="form-control mb-2" placeholder="Korean Word" autofocus>
-        <input type="text" id="eng" class="form-control mb-3" placeholder="Meaning">
-        <button id="addBtn" class="btn btn-primary w-100 fw-bold" onclick="save()">SAVE TO CLOUD</button>
-    </div>
+        <div id="workSection" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="fw-bold m-0" id="displayUser"></h5>
+                    <span class="badge bg-primary rounded-pill" id="displayLevel"></span>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="location.reload()">Switch</button>
+            </div>
 
-    <hr>
-    <h6 class="fw-bold mb-3">Recently Added</h6>
-    <div id="localList"></div>
+            <div class="mb-4">
+                <input type="text" id="korInput" class="form-control text-center fs-4" placeholder="හන්ගුල්..." autofocus>
+                <input type="text" id="engInput" class="form-control text-center" placeholder="තේරුම...">
+                <button id="saveBtn" class="btn-main" onclick="saveData()">SAVE WORD</button>
+            </div>
+
+            <hr>
+            <h6 class="fw-bold text-secondary mb-3">Sync History (<span id="wordCount">0</span>)</h6>
+            <div id="historyList" style="max-height: 350px; overflow-y: auto;">
+                <p class="text-center text-muted small">Loading history...</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzEfDS-sSWLV0Vx5YVKnUvhN4z8C3ieqNDgINKUUe9q-XTyCHpCCSgIzwjlzyGqleHDaA/exec';
-    document.getElementById('uName').innerText = localStorage.getItem('fullName');
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyIlCMqdBz-hEW362WAKTLw7IgO_oPkqITIUXyRgYBNJgfBy8VVxAHjledlLeLB7N7gQ/exec';
+    let currentUser = "", currentLevel = "", localHistory = [];
 
-    async function save() {
-        const kor = document.getElementById('kor').value;
-        const eng = document.getElementById('eng').value;
-        const level = document.getElementById('level').value;
-        const user = localStorage.getItem('username');
+    // 1. Session එක ආරම්භ කිරීම සහ Sheet එකෙන් දත්ත Sync කිරීම
+    async function initSession() {
+        currentUser = document.getElementById('userName').value.trim();
+        currentLevel = document.getElementById('levelSelect').value;
 
-        if(!kor || !eng) return;
+        if(!currentUser) return alert("කරුණාකර නමක් ඇතුළත් කරන්න.");
 
-        const btn = document.getElementById('addBtn');
-        btn.disabled = true;
-        btn.innerText = "Saving...";
+        document.getElementById('setupSection').classList.add('hidden');
+        document.getElementById('workSection').classList.remove('hidden');
+        document.getElementById('displayUser').innerText = currentUser;
+        document.getElementById('displayLevel').innerText = currentLevel;
 
+        // Fetch History from Cloud
         try {
-            const p = new URLSearchParams({ user, level, korean: kor, english: eng });
-            await fetch(SCRIPT_URL, { method: 'POST', body: p, mode: 'no-cors' });
-
-            const list = document.getElementById('localList');
-            list.innerHTML = `<div class="history-item"><div><b>${kor}</b><br><small class="text-muted">${eng}</small></div><span class="badge bg-light text-primary border">${level}</span></div>` + list.innerHTML;
-
-            document.getElementById('kor').value = '';
-            document.getElementById('eng').value = '';
-            document.getElementById('kor').focus();
-        } catch (e) { alert("Error!"); }
-        btn.disabled = false;
-        btn.innerText = "SAVE TO CLOUD";
+            const res = await fetch(`${SCRIPT_URL}?action=getHistory&user=${currentUser}&level=${currentLevel}`);
+            localHistory = await res.json();
+            renderHistory();
+        } catch (e) {
+            console.log("Error fetching history");
+            document.getElementById('historyList').innerHTML = "";
+        }
     }
 
-    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+    // 2. දත්ත Save කිරීම සහ Duplicate පරීක්ෂා කිරීම
+    async function saveData() {
+        const kor = document.getElementById('korInput').value.trim();
+        const eng = document.getElementById('engInput').value.trim();
+        if(!kor || !eng) return;
+
+        // Duplicate Check (Korean අකුරු පරීක්ෂා කිරීම)
+        const isDuplicate = localHistory.some(item => item.korean === kor);
+        if(isDuplicate) {
+            const confirmAdd = confirm(`⚠️ "${kor}" දැනටමත් මේ Level එකේ තියෙනවා. ආයෙත් ඇතුළත් කරන්නද?`);
+            if(!confirmAdd) return;
+        }
+
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.innerText = "Syncing...";
+
+        try {
+            const params = new URLSearchParams({ user: currentUser, level: currentLevel, korean: kor, english: eng });
+            await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
+
+            // Update Local UI
+            localHistory.unshift({ korean: kor, english: eng });
+            renderHistory();
+
+            document.getElementById('korInput').value = "";
+            document.getElementById('engInput').value = "";
+            document.getElementById('korInput').focus();
+        } catch (e) {
+            alert("Error saving!");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "SAVE WORD";
+        }
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        document.getElementById('wordCount').innerText = localHistory.length;
+        list.innerHTML = localHistory.map(item => `
+            <div class="history-card">
+                <div><div class="kor-txt">${item.korean}</div><div class="small text-muted">${item.english}</div></div>
+                <i class="bi bi-check2-circle text-success"></i>
+            </div>
+        `).join('');
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') {
+            if(document.activeElement.id === 'korInput') document.getElementById('engInput').focus();
+            else if(document.activeElement.id === 'engInput') saveData();
+        }
+    });
 </script>
 </body>
 </html>
