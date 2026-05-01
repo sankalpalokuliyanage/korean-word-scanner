@@ -157,7 +157,7 @@
             listContainer.innerHTML += `
                 <div class="user-list-item">
                     <span class="text-light fw-bold"><i class="bi bi-person me-2 text-primary"></i>${name}</span>
-                    <span class="badge bg-primary bg-opacity-20 text-primary">${count} Words</span>
+                    <span class="badge bg-primary bg-opacity-20 text-white">${count} Words</span>
                 </div>
             `;
         });
@@ -196,7 +196,7 @@
                     <td><small class="text-secondary">${item.date || 'Today'}</small></td>
                     <td><span class="text-info">${item.user}</span></td>
                     <td><span class="badge bg-light text-dark">${item.level}</span></td>
-                    <td class="fw-bold text-white fs-5">${item.korean}</td>
+                    <td class="fw-bold fs-5">${item.korean}</td>
                     <td>${item.english}</td>
                 </tr>
             `;
