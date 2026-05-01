@@ -17,7 +17,7 @@
         .kor-txt { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
         .scroll-area { max-height: 450px; overflow-y: auto; padding-right: 10px; }
         .section-title { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 15px; display: flex; justify-content: space-between; }
-        .badge-count { background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 6px; }
+        .badge-count { background: #e2e8f0; color: #1f2329; padding: 2px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -47,8 +47,8 @@
 
             <div class="row mb-5 justify-content-center text-center">
                 <div class="col-md-7">
-                    <input type="text" id="korInput" class="form-control text-center fs-4" placeholder="හන්ගුල්..." autofocus>
-                    <input type="text" id="engInput" class="form-control text-center" placeholder="තේරුම...">
+                    <input type="text" id="korInput" class="form-control text-center fs-4" placeholder="Korean Word" autofocus>
+                    <input type="text" id="engInput" class="form-control text-center" placeholder="English Meaning">
                     <button id="saveBtn" class="btn-main" onclick="saveData()">SAVE WORD</button>
                 </div>
             </div>
@@ -99,7 +99,7 @@
         const myHistoryList = document.getElementById('myHistoryList');
         const globalList = document.getElementById('globalHistoryList');
 
-        // ඔයාගේ වචන විතරක් වෙන් කරගන්නවා (Case-insensitive)
+
         const myWords = allWords.filter(item => item.user.toLowerCase() === currentUser.toLowerCase());
 
         document.getElementById('myCount').innerText = myWords.length;
@@ -128,7 +128,7 @@
 
         // Global Check for Duplicates
         if(allWords.some(i => i.korean === kor)) {
-            if(!confirm(`"${kor}" දැනටමත් තියෙනවා. ආයෙත් දාන්නද?`)) return;
+            if(!confirm(`"${kor}" Already exists. Add again?`)) return;
         }
 
         const btn = document.getElementById('saveBtn');

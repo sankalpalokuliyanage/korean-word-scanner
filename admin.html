@@ -55,7 +55,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h2 class="fw-bold">Database Intelligence</h2>
-            <p class="text-secondary">පරිශීලක ක්‍රියාකාරකම් සහ දත්ත විශ්ලේෂණය</p>
+            <p class="text-secondary">Manage all data</p>
         </div>
         <button class="btn btn-primary px-4 py-2 rounded-pill" onclick="fetchAllData()">
             <i class="bi bi-arrow-sync me-2"></i> Refresh Database
@@ -82,9 +82,9 @@
         <div class="col-md-4">
             <div class="stats-card">
                 <h6 class="text-secondary fw-bold mb-3 text-primary">QUICK ADD (ADMIN)</h6>
-                <input type="text" id="adminKor" class="form-control mb-2" placeholder="Korean Word">
+                <input type="text" id="adminKor" class="form-control mb-2 " placeholder="Korean Word">
                 <input type="text" id="adminEng" class="form-control mb-2" placeholder="English Meaning">
-                <select id="adminLevel" class="form-select mb-3">
+                <select id="adminLevel" class="form-select mb-3 text-primary">
                     <option>Level 1</option><option>Level 2</option><option>Level 3</option>
                     <option>Level 4</option><option>Level 5</option><option>Level 6</option>
                 </select>
@@ -117,7 +117,7 @@
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
-                    <tr><td colspan="5" class="text-center py-5 text-muted">පද්ධතියට සම්බන්ධ වෙමින්...</td></tr>
+                    <tr><td colspan="5" class="text-center py-5 text-muted">Connect to the system...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -131,8 +131,7 @@
 
     async function fetchAllData() {
         try {
-            // මෙහිදී action=getHistory හරහා සම්පූර්ණ දත්ත ගෙන්වා ගන්නා බව උපකල්පනය කෙරේ
-            // නැතහොත් සියලු දත්ත දෙන action එකක් Apps Script එකට එක් කරන්න
+  
             const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=All`); 
             fullDataset = await res.json();
             
