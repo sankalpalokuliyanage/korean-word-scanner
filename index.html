@@ -2,22 +2,29 @@
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Master Dashboard | TOPIK Vocabulary</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root { --primary: #4f46e5; --bg: #f1f5f9; }
-        body { background: var(--bg); font-family: 'Inter', sans-serif; padding: 20px; }
-        .app-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 950px; margin: auto; }
+        body { background: var(--bg); font-family: 'Inter', sans-serif; padding: 15px; }
+        .app-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 950px; margin: auto; }
         .hidden { display: none; }
-        .form-control { border-radius: 12px; padding: 12px; border: 2px solid #e2e8f0; margin-bottom: 15px; }
+        .form-control { border-radius: 12px; padding: 12px; border: 2px solid #e2e8f0; margin-bottom: 12px; }
         .btn-main { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; transition: 0.3s; }
         .history-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .kor-txt { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
-        .scroll-area { max-height: 450px; overflow-y: auto; padding-right: 10px; }
-        .section-title { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .scroll-area { max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        .section-title { font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 15px; display: flex; justify-content: space-between; }
         .badge-count { background: #e2e8f0; color: #1f2329; padding: 2px 8px; border-radius: 6px; }
+        
+        /* Mobile Portrait Optimization */
+        @media (max-width: 768px) {
+            .app-card { padding: 20px; }
+            .row > div { margin-bottom: 30px; }
+            .border-end { border-end: none !important; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -45,10 +52,21 @@
                 <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="location.reload()">Switch</button>
             </div>
 
-            <div class="row mb-5 justify-content-center text-center">
+            <div class="row mb-4 justify-content-center text-center">
                 <div class="col-md-7">
-                    <input type="text" id="korInput" class="form-control text-center fs-4" placeholder="Korean Word" autofocus>
-                    <input type="text" id="engInput" class="form-control text-center" placeholder="English Meaning">
+                    <input type="text" id="korInput" 
+                           class="form-control text-center fs-4" 
+                           placeholder="Korean Word" 
+                           lang="ko" 
+                           spellcheck="false" 
+                           autofocus>
+                    
+                    <input type="text" id="engInput" 
+                           class="form-control text-center" 
+                           placeholder="English Meaning" 
+                           lang="en" 
+                           spellcheck="false">
+                    
                     <button id="saveBtn" class="btn-main" onclick="saveData()">SAVE WORD</button>
                 </div>
             </div>
@@ -59,7 +77,7 @@
                     <div id="myHistoryList" class="scroll-area"></div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 mt-4 mt-md-0">
                     <div class="section-title">Global Level Bank <span class="badge-count" id="globalCount">0</span></div>
                     <div id="globalHistoryList" class="scroll-area"></div>
                 </div>
@@ -99,7 +117,6 @@
         const myHistoryList = document.getElementById('myHistoryList');
         const globalList = document.getElementById('globalHistoryList');
 
-
         const myWords = allWords.filter(item => item.user.toLowerCase() === currentUser.toLowerCase());
 
         document.getElementById('myCount').innerText = myWords.length;
@@ -126,7 +143,6 @@
         const eng = document.getElementById('engInput').value.trim();
         if(!kor || !eng) return;
 
-        // Global Check for Duplicates
         if(allWords.some(i => i.korean === kor)) {
             if(!confirm(`"${kor}" Already exists. Add again?`)) return;
         }
@@ -138,12 +154,12 @@
             const params = new URLSearchParams({ user: currentUser, level: currentLevel, korean: kor, english: eng });
             await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
 
-            // Local Update
             allWords.unshift({ user: currentUser, korean: kor, english: eng });
             renderLists();
 
             document.getElementById('korInput').value = "";
             document.getElementById('engInput').value = "";
+            // Focus back to Korean input to trigger keyboard switch hint
             document.getElementById('korInput').focus();
         } catch (e) {
             alert("Error!");
